@@ -77,12 +77,12 @@ func main() {
 	recipes = session.DB("recipes").C("scraper")
 
 	scraper := goscrape.NewScraper()
-	AddPatternPriority(scraper, "http://allrecipes\\.com/recipe/.*?/detail\\.aspx.*", HandleRecipe, goscrape.HighPriority)
-	AddPattern(scraper, "http://allrecipes\\.com/menu/.*", handlers.Null)
-	AddPattern(scraper, "http://allrecipes\\.com/video.*", handlers.Null)
-	AddPattern(scraper, "http://allrecipes\\.com/my/.*", handlers.Null)
-	AddPattern(scraper, "http://allrecipes\\.com.*/membership/.*", handlers.Null)
-	AddPattern(scraper, "http://allrecipes\\.com.*", handlers.Default)
+	AddPatternPriority(scraper, "^http://allrecipes\\.com/recipe/.*?/detail\\.aspx.*", HandleRecipe, goscrape.HighPriority)
+	AddPattern(scraper, "^http://allrecipes\\.com/menu/.*", handlers.Null)
+	AddPattern(scraper, "^http://allrecipes\\.com/video.*", handlers.Null)
+	AddPattern(scraper, "^http://allrecipes\\.com/my/.*", handlers.Null)
+	AddPattern(scraper, "^http://allrecipes\\.com.*/membership/.*", handlers.Null)
+	AddPattern(scraper, "^http://allrecipes\\.com.*", handlers.Default)
 
 	scraper.Enqueue(UrlOrDie("http://allrecipes.com"))
 	scraper.Start()
