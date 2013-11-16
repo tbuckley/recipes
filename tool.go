@@ -1,53 +1,39 @@
 package main
 
 import (
-	"expvar"
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
-	"regexp"
 
-	"github.com/tbuckley/goscrape"
-	"github.com/tbuckley/goscrape/handlers"
-	"labix.org/v2/mgo"
+	"github.com/tbuckley/recipes/sample"
+	"github.com/tbuckley/recipes/scrape"
 )
 
 var (
-	varRecipes = expvar.NewInt("recipes")
-
-	recipes *mgo.Collection
+	expvarServer = flag.Bool("expvar", false, "")
+	serverPort   = flag.String("port", ":8080", "")
 )
 
-type (
-	Recipe struct {
-		Page string
-	}
-)
+const usage = `Usage:
+  recipes [options] [--expvar] [--port=PORT] scrape
+  recipes [options] [--size=N] [--path=PATH] sample
+`
 
-func HandleRecipe(s goscrape.WebScraper, page *url.URL) {
-	log.Printf("RECIPE: %s\n", page.String())
-	varRecipes.Add(1)
-	err := recipes.Insert(&Recipe{Page: page.String()})
-	if err != nil {
-		panic(err)
-	}
-	handlers.Default(s, page)
+// Scrape will scrape the appropriate websites
+func Scrape() {
+	scrape.Run()
 }
 
-func AddPattern(s goscrape.WebScraper, pattern string, handler goscrape.Handler) {
-	p, err := regexp.CompilePOSIX(pattern)
-	if err != nil {
-		log.Fatal(err)
-	}
-	s.AddHandler(p, handler)
+func PrintUsage() {
+	fmt.Println(usage)
 }
-func AddPatternPriority(s goscrape.WebScraper, pattern string, handler goscrape.Handler, priority int) {
-	p, err := regexp.CompilePOSIX(pattern)
-	if err != nil {
-		log.Fatal(err)
-	}
-	s.AddHandlerPriority(p, handler, priority)
+
+func StartServer() {
+	go func() {
+		log.Fatal(http.ListenAndServe(*serverPort, nil))
+	}()
 }
 
 func init() {
@@ -55,35 +41,25 @@ func init() {
 	log.SetOutput(os.Stdout)
 }
 
-func UrlOrDie(page string) *url.URL {
-	pageURL, err := url.Parse(page)
-	if err != nil {
-		log.Fatal("Could not parse:", page)
-	}
-	return pageURL
-}
-
 func main() {
-	session, err := mgo.Dial("127.0.0.1")
-	if err != nil {
-		panic(err)
+	flag.Parse()
+
+	if *expvarServer {
+		StartServer()
 	}
-	defer session.Close()
 
-	go func() {
-		log.Fatal(http.ListenAndServe(":8080", nil))
-	}()
+	if flag.NArg() < 1 {
+		PrintUsage()
+		return
+	}
+	command := flag.Arg(0)
 
-	recipes = session.DB("recipes").C("scraper")
-
-	scraper := goscrape.NewScraper()
-	AddPatternPriority(scraper, "^http://allrecipes\\.com/recipe/.*?/detail\\.aspx.*", HandleRecipe, goscrape.HighPriority)
-	AddPattern(scraper, "^http://allrecipes\\.com/menu/.*", handlers.Null)
-	AddPattern(scraper, "^http://allrecipes\\.com/video.*", handlers.Null)
-	AddPattern(scraper, "^http://allrecipes\\.com/my/.*", handlers.Null)
-	AddPattern(scraper, "^http://allrecipes\\.com.*/membership/.*", handlers.Null)
-	AddPattern(scraper, "^http://allrecipes\\.com.*", handlers.Default)
-
-	scraper.Enqueue(UrlOrDie("http://allrecipes.com"))
-	scraper.Start()
+	switch command {
+	case "scrape":
+		Scrape()
+	case "sample":
+		sample.Run()
+	default:
+		PrintUsage()
+	}
 }
