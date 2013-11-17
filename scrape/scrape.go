@@ -4,7 +4,6 @@ import (
 	"expvar"
 	"log"
 	"net/url"
-	"regexp"
 
 	"github.com/tbuckley/goscrape"
 	"github.com/tbuckley/goscrape/handlers"
@@ -36,40 +35,18 @@ func HandleRecipe(s goscrape.WebScraper, page *url.URL) {
 	handlers.DefaultPage(s, page, body)
 }
 
-func AddPattern(s goscrape.WebScraper, pattern string, handler goscrape.Handler) {
-	p, err := regexp.CompilePOSIX(pattern)
-	if err != nil {
-		log.Fatal(err)
-	}
-	s.AddHandler(p, handler)
-}
-func AddPatternPriority(s goscrape.WebScraper, pattern string, handler goscrape.Handler, priority uint) {
-	p, err := regexp.CompilePOSIX(pattern)
-	if err != nil {
-		log.Fatal(err)
-	}
-	s.AddHandlerPriority(p, handler, priority)
-}
-
-func UrlOrDie(page string) *url.URL {
-	pageURL, err := url.Parse(page)
-	if err != nil {
-		log.Fatal("Could not parse:", page)
-	}
-	return pageURL
-}
-
 func Run(arguments map[string]interface{}) {
 	scraper := goscrape.NewScraper()
 
-	// Set scraper rules
-	AddPatternPriority(scraper, "^http://allrecipes\\.com/recipe/.*?/detail\\.aspx.*", HandleRecipe, goscrape.HighPriority)
-	AddPattern(scraper, "^http://allrecipes\\.com/menu/.*", handlers.Null)
-	AddPattern(scraper, "^http://allrecipes\\.com/video.*", handlers.Null)
-	AddPattern(scraper, "^http://allrecipes\\.com/my/.*", handlers.Null)
-	AddPattern(scraper, "^http://allrecipes\\.com.*/membership/.*", handlers.Null)
-	AddPattern(scraper, "^http://allrecipes\\.com.*", handlers.Default)
+	config, err := ParseConfiguration(arguments["CONFIG"].(string))
+	if err != nil {
+		panic(err)
+	}
 
-	scraper.Enqueue(UrlOrDie("http://allrecipes.com"))
+	err = config.InitializeScraper(scraper)
+	if err != nil {
+		panic(err)
+	}
+
 	scraper.Start()
 }

@@ -12,11 +12,30 @@ Recipes is currently just a scraper for recipe sites written in Go, but it hopes
 
 1. Start a Mongo server on your local machine.
 2. go install github.com/tbuckley/recipes
-3. ./bin/recipes
-4. Monitor progress at localhost:8080
+3. ./bin/recipes scrape path/to/config
+
+## Configuration
+
+Configuration is stored as a JSON file. Here is a sample:
+
+```json
+{
+  "handlers": [
+    {
+      "pattern": "^http://allrecipes\\.com/recipe/.*?/detail\\.aspx.*",
+      "handler": "recipe",
+      "priority": 31
+    },
+    {
+      "pattern": "^http://allrecipes\\.com.*",
+      "handler": "default",
+      "priority": 15
+    }
+  ],
+  "initial": ["http://allrecipes.com"]
+}
+```
 
 ### Issues
 * May crash instead of completing gracefully (haven't run it to end...)
-* Requires Mongo running on local machine
-* Uses hard-coded URLs instead of config file
 * Probably many more...

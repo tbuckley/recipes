@@ -16,7 +16,7 @@ const usage = `Recipes.
 
 Usage:
   recipes [options] sample SIZE OUTPUT
-  recipes [options] scrape
+  recipes [options] scrape CONFIG
   recipes [options] empty
 
 Options:
