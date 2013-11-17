@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/docopt/docopt.go"
-	// "github.com/tbuckley/recipes/empty"
+	"github.com/tbuckley/recipes/empty"
 	"github.com/tbuckley/recipes/sample"
 	"github.com/tbuckley/recipes/scrape"
 )
@@ -17,6 +17,7 @@ const usage = `Recipes.
 Usage:
   recipes [options] sample SIZE OUTPUT
   recipes [options] scrape
+  recipes [options] empty
 
 Options:
   --mongodb=DB    Mongo DB to use [default: recipes]
@@ -53,5 +54,7 @@ func main() {
 		scrape.Run(arguments)
 	} else if arguments["sample"].(bool) {
 		sample.Run(arguments)
+	} else if arguments["empty"].(bool) {
+		empty.Run(arguments)
 	}
 }

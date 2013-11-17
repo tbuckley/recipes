@@ -27,5 +27,5 @@ func AllRecipes() ([]Recipe, error) {
 }
 
 func DeleteRecipes() error {
-	return Recipes.Remove(bson.M{})
+	return Recipes.DropCollection()
 }
