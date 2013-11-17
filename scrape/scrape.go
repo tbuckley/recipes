@@ -59,14 +59,7 @@ func UrlOrDie(page string) *url.URL {
 	return pageURL
 }
 
-func Run() {
-	// Start MongoDB
-	err := db.Connect()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
+func Run(arguments map[string]interface{}) {
 	scraper := goscrape.NewScraper()
 
 	// Set scraper rules

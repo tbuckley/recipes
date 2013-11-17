@@ -6,6 +6,7 @@ Recipes is currently just a scraper for recipe sites written in Go, but it hopes
 * go get github.com/tbuckley/goscrape
 * go get github.com/tbuckley/htmlutils
 * go get labix.org/v2/mgo
+* go get github.com/docopt/docopt.go
 
 ### Steps
 

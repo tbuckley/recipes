@@ -1,38 +1,33 @@
 package main
 
 import (
-	"flag"
-	"fmt"
+	"github.com/tbuckley/recipes/db"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/docopt/docopt.go"
+	// "github.com/tbuckley/recipes/empty"
 	"github.com/tbuckley/recipes/sample"
 	"github.com/tbuckley/recipes/scrape"
 )
 
-var (
-	expvarServer = flag.Bool("expvar", false, "")
-	serverPort   = flag.String("port", ":8080", "")
-)
+const usage = `Recipes.
 
-const usage = `Usage:
-  recipes [options] [--expvar] [--port=PORT] scrape
-  recipes [options] [--size=N] [--path=PATH] sample
+Usage:
+  recipes [options] sample SIZE OUTPUT
+  recipes [options] scrape
+
+Options:
+  --mongodb=DB    Mongo DB to use [default: recipes]
+  --mongourl=URL  Mongo server to connect to [default: 127.0.0.1]
+  --expvar        Start expvar server if no server running
+  --addr=ADDR     Address on which to run server [default: :8080]
 `
 
-// Scrape will scrape the appropriate websites
-func Scrape() {
-	scrape.Run()
-}
-
-func PrintUsage() {
-	fmt.Println(usage)
-}
-
-func StartServer() {
+func StartServer(addr string) {
 	go func() {
-		log.Fatal(http.ListenAndServe(*serverPort, nil))
+		log.Fatal(http.ListenAndServe(addr, nil))
 	}()
 }
 
@@ -42,24 +37,21 @@ func init() {
 }
 
 func main() {
-	flag.Parse()
+	arguments, _ := docopt.Parse(usage, nil, true, "Recipes 0.1", false)
 
-	if *expvarServer {
-		StartServer()
+	err := db.Connect(arguments["--mongourl"].(string), arguments["--mongodb"].(string))
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	if arguments["--expvar"].(bool) {
+		StartServer(arguments["--addr"].(string))
 	}
 
-	if flag.NArg() < 1 {
-		PrintUsage()
-		return
-	}
-	command := flag.Arg(0)
-
-	switch command {
-	case "scrape":
-		Scrape()
-	case "sample":
-		sample.Run()
-	default:
-		PrintUsage()
+	if arguments["scrape"].(bool) {
+		scrape.Run(arguments)
+	} else if arguments["sample"].(bool) {
+		sample.Run(arguments)
 	}
 }

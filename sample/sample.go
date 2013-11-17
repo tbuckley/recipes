@@ -1,48 +1,44 @@
 package sample
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"strconv"
 
 	"github.com/tbuckley/recipes/db"
 )
 
-var (
-	sampleSize = flag.Int("size", 10, "")
-	samplePath = flag.String("path", ".", "")
-)
+func MinInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
 
-func Run() {
-	finfo, err := os.Lstat(*samplePath)
+func Run(arguments map[string]interface{}) {
+	outputPath := arguments["OUTPUT"].(string)
+	finfo, err := os.Lstat(outputPath)
 	if err != nil {
 		panic(err)
 	}
 	if !finfo.IsDir() {
-		fmt.Printf("Invalid path: %s\n", *samplePath)
+		fmt.Printf("Invalid path: %s\n", outputPath)
 	}
-
-	err = db.Connect()
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
 
 	recipes, err := db.AllRecipes()
 	if err != nil {
 		panic(err)
 	}
 
-	var num int = 0
-	if *sampleSize < len(recipes) {
-		num = *sampleSize
-	} else {
-		num = len(recipes)
+	size, err := strconv.ParseInt(arguments["SIZE"].(string), 10, 64)
+	if err != nil {
+		panic(err)
 	}
+	num := MinInt(int(size), len(recipes))
 	for i := 0; i < num; i++ {
-		filename := path.Join(*samplePath, fmt.Sprintf("recipe_%04d.html", i))
+		filename := path.Join(outputPath, fmt.Sprintf("recipe_%04d.html", i))
 		ioutil.WriteFile(filename, []byte(recipes[i].Content), os.ModePerm)
 	}
 }

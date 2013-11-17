@@ -1,26 +1,19 @@
 package db
 
 import (
-	"flag"
-
 	"labix.org/v2/mgo"
 )
 
-var (
-	mongoURL = flag.String("mongourl", "127.0.0.1", "")
-	mongoDB  = flag.String("mongodb", "recipes", "")
+var session *mgo.Session
 
-	session *mgo.Session
-)
-
-func Connect() error {
+func Connect(url, db string) error {
 	var err error
-	session, err = mgo.Dial(*mongoURL)
+	session, err = mgo.Dial(url)
 	if err != nil {
 		return err
 	}
 
-	Recipes = session.DB(*mongoDB).C("scraper")
+	Recipes = session.DB(db).C("scraper")
 	return nil
 }
 
