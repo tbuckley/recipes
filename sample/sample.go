@@ -36,7 +36,10 @@ func Run(arguments map[string]interface{}) {
 	recipe := db.Recipe{}
 	for i := 0; i < int(size) && iter.Next(&recipe); i++ {
 		filename := path.Join(outputPath, fmt.Sprintf("recipe_%04d.html", i))
-		ioutil.WriteFile(filename, []byte(recipe.Content), os.ModePerm)
+		err = ioutil.WriteFile(filename, []byte(recipe.Content), os.ModePerm)
+		if err != nil {
+			panic(err)
+		}
 	}
 	if err := iter.Close(); err != nil {
 		panic(err)
