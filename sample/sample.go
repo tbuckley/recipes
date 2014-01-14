@@ -27,18 +27,18 @@ func Run(arguments map[string]interface{}) {
 		fmt.Printf("Invalid path: %s\n", outputPath)
 	}
 
-	recipes, err := db.AllRecipes()
-	if err != nil {
-		panic(err)
-	}
-
 	size, err := strconv.ParseInt(arguments["SIZE"].(string), 10, 64)
 	if err != nil {
 		panic(err)
 	}
-	num := MinInt(int(size), len(recipes))
-	for i := 0; i < num; i++ {
+
+	iter := db.SomeRecipes(200, 0.25)
+	recipe := db.Recipe{}
+	for i := 0; i < int(size) && iter.Next(&recipe); i++ {
 		filename := path.Join(outputPath, fmt.Sprintf("recipe_%04d.html", i))
-		ioutil.WriteFile(filename, []byte(recipes[i].Content), os.ModePerm)
+		ioutil.WriteFile(filename, []byte(recipe.Content), os.ModePerm)
+	}
+	if err := iter.Close(); err != nil {
+		panic(err)
 	}
 }

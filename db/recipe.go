@@ -26,6 +26,10 @@ func AllRecipes() ([]Recipe, error) {
 	return recipes, nil
 }
 
+func SomeRecipes(batch int, prefetch float64) *mgo.Iter {
+	return Recipes.Find(bson.M{}).Batch(batch).Prefetch(prefetch).Iter()
+}
+
 func DeleteRecipes() error {
 	return Recipes.DropCollection()
 }
